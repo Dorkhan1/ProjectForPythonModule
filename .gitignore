@@ -1,0 +1,28 @@
+# --- Data -------------------------------------------------------------
+# Raw CSV files from Kaggle are too large for GitHub (>100 MB).
+# See README.md for download instructions.
+data/
+
+# --- Python ----------------------------------------------------------
+__pycache__/
+*.py[cod]
+
+# --- Virtual environment ---------------------------------------------
+.venv/
+venv/
+
+# --- Jupyter ---------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- Streamlit -------------------------------------------------------
+# May contain secrets; never commit.
+.streamlit/secrets.toml
+
+# --- Editors / OS ----------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+
+# --- Secrets ---------------------------------------------------------
+.env
+kaggle.json
