@@ -1,9 +1,4 @@
-"""Load the raw Food.com CSV files into pandas DataFrames.
-
-Every public function either returns a DataFrame with the expected
-columns and dtypes, or raises :class:`DataLoadError` with a message that
-tells the user how to fix the problem (e.g. where to download the data).
-"""
+"""Loading of the raw Food.com CSV files."""
 
 from pathlib import Path
 
@@ -17,7 +12,7 @@ class DataLoadError(Exception):
 
 
 def _check_file_exists(path: Path) -> None:
-    """Make sure a data file exists before trying to read it.
+    """Check that a data file exists.
 
     Parameters
     ----------
@@ -38,10 +33,7 @@ def _check_file_exists(path: Path) -> None:
 
 
 def _check_columns(path: Path, required: list[str]) -> None:
-    """Verify that a CSV file contains all required columns.
-
-    Only the header row is read, so this check is cheap even for
-    files of several hundred megabytes.
+    """Check that a CSV file has all required columns (reads header only).
 
     Parameters
     ----------
@@ -137,10 +129,7 @@ def load_recipes(path: Path = config.RECIPES_PATH) -> pd.DataFrame:
 def load_interactions(
     path: Path = config.INTERACTIONS_PATH,
 ) -> pd.DataFrame:
-    """Load user reviews from ``RAW_interactions.csv``.
-
-    The free-text review is not loaded: only the numeric rating is
-    needed for ranking.
+    """Load user ratings from ``RAW_interactions.csv`` (without review text).
 
     Parameters
     ----------
