@@ -30,3 +30,7 @@ INTERACTION_DTYPES = {
     "rating": "int8",
 }
 INTERACTION_DATE_COLUMNS = ["date"]
+
+# rating scale
+NO_RATING = 0  # review without stars
+STAR_VALUES = [1, 2, 3, 4, 5]

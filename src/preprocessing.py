@@ -1,0 +1,54 @@
+"""Cleaning and preparation of recipes and ratings."""
+
+import pandas as pd
+
+from src import config
+
+
+def remove_unrated(interactions: pd.DataFrame) -> pd.DataFrame:
+    """Remove reviews that have no star rating.
+
+    Parameters
+    ----------
+    interactions : pandas.DataFrame
+        Raw interactions with a ``rating`` column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of the input containing only ratings from 1 to 5.
+    """
+    return interactions[interactions["rating"] != config.NO_RATING].copy()
+
+
+def aggregate_ratings(ratings: pd.DataFrame) -> pd.DataFrame:
+    """Compute rating statistics for each recipe.
+
+    Parameters
+    ----------
+    ratings : pandas.DataFrame
+        Ratings with ``recipe_id`` and ``rating`` columns, without zeros
+        (see :func:`remove_unrated`).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Indexed by ``recipe_id``, with columns:
+
+        - ``n_ratings`` : number of ratings
+        - ``mean_rating`` : average rating
+        - ``stars_1`` ... ``stars_5`` : number of ratings of each value
+    """
+    star_counts = (
+        ratings.groupby(["recipe_id", "rating"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(columns=config.STAR_VALUES, fill_value=0)
+    )
+    star_counts.columns = [f"stars_{star}" for star in star_counts.columns]
+    star_counts.columns.name = None
+
+    stats = ratings.groupby("recipe_id")["rating"].agg(
+        n_ratings="size", mean_rating="mean"
+    )
+    return stats.join(star_counts)
