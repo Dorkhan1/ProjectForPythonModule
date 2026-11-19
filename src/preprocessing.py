@@ -52,3 +52,54 @@ def aggregate_ratings(ratings: pd.DataFrame) -> pd.DataFrame:
         n_ratings="size", mean_rating="mean"
     )
     return stats.join(star_counts)
+
+
+def clean_minutes(recipes: pd.DataFrame) -> pd.DataFrame:
+    """Replace invalid preparation times with NaN.
+
+    A time is invalid if it equals 0 or exceeds
+    :data:`src.config.MAX_MINUTES`.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipes with a ``minutes`` column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of the input where ``minutes`` is float with NaN for
+        invalid values.
+    """
+    recipes = recipes.copy()
+    minutes = recipes["minutes"].astype("float64")
+    invalid = (minutes <= 0) | (minutes > config.MAX_MINUTES)
+    recipes["minutes"] = minutes.mask(invalid)
+    return recipes
+
+
+def add_categories(recipes: pd.DataFrame) -> pd.DataFrame:
+    """Add binned preparation time and number of ingredients.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipes with ``minutes`` (cleaned, see :func:`clean_minutes`)
+        and ``n_ingredients`` columns.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of the input with two new ordered categorical columns:
+        ``time_category`` and ``ingredient_category``.
+    """
+    recipes = recipes.copy()
+    recipes["time_category"] = pd.cut(
+        recipes["minutes"], bins=config.TIME_BINS, labels=config.TIME_LABELS
+    )
+    recipes["ingredient_category"] = pd.cut(
+        recipes["n_ingredients"],
+        bins=config.INGREDIENT_BINS,
+        labels=config.INGREDIENT_LABELS,
+    )
+    return recipes

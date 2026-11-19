@@ -31,6 +31,16 @@ INTERACTION_DTYPES = {
 }
 INTERACTION_DATE_COLUMNS = ["date"]
 
+# preparation time cleaning and bins (in minutes)
+MAX_MINUTES = 365 * 24 * 60  # 1 year
+TIME_BINS = [0, 15, 30, 60, 240, 1440, float("inf")]
+TIME_LABELS = ["≤15 min", "15-30 min", "30-60 min", "1-4 h", "4-24 h",
+               "> 1 day"]
+
+# number of ingredients bins
+INGREDIENT_BINS = [0, 5, 9, 14, float("inf")]
+INGREDIENT_LABELS = ["1-5", "6-9", "10-14", "15+"]
+
 # rating scale
 NO_RATING = 0  # review without stars
 STAR_VALUES = [1, 2, 3, 4, 5]
