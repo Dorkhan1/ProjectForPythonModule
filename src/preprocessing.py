@@ -143,3 +143,40 @@ def parse_tags(recipes: pd.DataFrame) -> pd.DataFrame:
     recipes = recipes.copy()
     recipes["tags"] = recipes["tags"].fillna("[]").map(_parse_tag_list)
     return recipes
+
+
+def build_recipe_table(
+    recipes: pd.DataFrame, interactions: pd.DataFrame
+) -> pd.DataFrame:
+    """Build the final table: one row per rated recipe with its stats.
+
+    Recipes without any star rating are dropped.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Raw recipes from :func:`src.data_loader.load_recipes`.
+    interactions : pandas.DataFrame
+        Raw interactions from :func:`src.data_loader.load_interactions`.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Recipe columns (``recipe_id``, ``name``, ``minutes``, ``tags``,
+        ``n_steps``, ``n_ingredients``, ``submitted``, ``time_category``,
+        ``ingredient_category``) joined with the rating columns from
+        :func:`aggregate_ratings`.
+    """
+    ratings = aggregate_ratings(remove_unrated(interactions))
+
+    recipes = parse_tags(add_categories(clean_minutes(recipes)))
+    recipes = recipes.rename(columns={"id": "recipe_id"})
+    recipes["name"] = recipes["name"].str.replace(r"\s+", " ", regex=True)
+
+    return recipes.merge(
+        ratings,
+        left_on="recipe_id",
+        right_index=True,
+        how="inner",
+        validate="one_to_one",
+    ).reset_index(drop=True)
