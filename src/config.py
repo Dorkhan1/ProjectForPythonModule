@@ -41,6 +41,27 @@ TIME_LABELS = ["≤15 min", "15-30 min", "30-60 min", "1-4 h", "4-24 h",
 INGREDIENT_BINS = [0, 5, 9, 14, float("inf")]
 INGREDIENT_LABELS = ["1-5", "6-9", "10-14", "15+"]
 
+# tag groups for category analysis
+TAG_GROUPS = {
+    "Course": [
+        "main-dish", "desserts", "side-dishes", "appetizers", "salads",
+        "breads", "breakfast", "soups-stews", "beverages", "snacks",
+        "sauces",
+    ],
+    "Cuisine": [
+        "american", "italian", "southern-united-states", "mexican",
+        "african", "indian", "greek", "french", "middle-eastern", "chinese",
+    ],
+    "Main ingredient": [
+        "vegetables", "fruit", "chicken", "beef", "cheese", "seafood",
+        "pasta", "pork", "potatoes", "beans", "chocolate", "eggs",
+    ],
+    "Dietary": [
+        "low-carb", "healthy", "low-calorie", "vegetarian", "low-fat",
+        "vegan", "high-protein", "diabetic", "gluten-free",
+    ],
+}
+
 # rating scale
 NO_RATING = 0  # review without stars
 STAR_VALUES = [1, 2, 3, 4, 5]

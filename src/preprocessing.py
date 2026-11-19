@@ -1,5 +1,7 @@
 """Cleaning and preparation of recipes and ratings."""
 
+import ast
+
 import pandas as pd
 
 from src import config
@@ -102,4 +104,42 @@ def add_categories(recipes: pd.DataFrame) -> pd.DataFrame:
         bins=config.INGREDIENT_BINS,
         labels=config.INGREDIENT_LABELS,
     )
+    return recipes
+
+
+def _parse_tag_list(text: str) -> list[str]:
+    """Convert a stringified list like ``"['a', 'b']"`` into a list.
+
+    Parameters
+    ----------
+    text : str
+        Tags as stored in the CSV file.
+
+    Returns
+    -------
+    list of str
+        Non-empty tags. Empty list if the text cannot be parsed.
+    """
+    try:
+        tags = ast.literal_eval(text)
+    except (ValueError, SyntaxError):
+        return []
+    return [tag for tag in tags if tag]
+
+
+def parse_tags(recipes: pd.DataFrame) -> pd.DataFrame:
+    """Convert the ``tags`` column from strings to lists of tags.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipes with a ``tags`` column of stringified lists.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of the input where ``tags`` contains Python lists.
+    """
+    recipes = recipes.copy()
+    recipes["tags"] = recipes["tags"].fillna("[]").map(_parse_tag_list)
     return recipes
