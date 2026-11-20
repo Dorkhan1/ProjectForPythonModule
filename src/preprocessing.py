@@ -47,8 +47,7 @@ def aggregate_ratings(ratings: pd.DataFrame) -> pd.DataFrame:
         .unstack(fill_value=0)
         .reindex(columns=config.STAR_VALUES, fill_value=0)
     )
-    star_counts.columns = [f"stars_{star}" for star in star_counts.columns]
-    star_counts.columns.name = None
+    star_counts.columns = config.STAR_COLUMNS
 
     stats = ratings.groupby("recipe_id")["rating"].agg(
         n_ratings="size", mean_rating="mean"

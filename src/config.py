@@ -65,3 +65,4 @@ TAG_GROUPS = {
 # rating scale
 NO_RATING = 0  # review without stars
 STAR_VALUES = [1, 2, 3, 4, 5]
+STAR_COLUMNS = [f"stars_{star}" for star in STAR_VALUES]
