@@ -170,7 +170,9 @@ def build_recipe_table(
 
     recipes = parse_tags(add_categories(clean_minutes(recipes)))
     recipes = recipes.rename(columns={"id": "recipe_id"})
-    recipes["name"] = recipes["name"].str.replace(r"\s+", " ", regex=True)
+    recipes["name"] = (
+        recipes["name"].str.replace(r"\s+", " ", regex=True).str.strip()
+    )
 
     return recipes.merge(
         ratings,
