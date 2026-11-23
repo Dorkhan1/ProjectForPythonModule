@@ -72,3 +72,6 @@ PRIOR_WEIGHT_QUANTILE = 0.9
 
 # lower bound of the confidence interval
 DEFAULT_CONFIDENCE = 0.95
+
+# size of the overall top list used in category analysis
+TOP_N_ANALYSIS = 1000

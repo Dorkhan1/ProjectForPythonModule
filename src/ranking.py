@@ -14,6 +14,7 @@ METHODS = {
     "Bayesian average": "bayesian_score",
     "Lower bound": "lower_bound_score",
 }
+DEFAULT_METHOD = "Lower bound"
 
 
 def global_mean_rating(recipes: pd.DataFrame) -> float:
