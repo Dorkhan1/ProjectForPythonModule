@@ -4,6 +4,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
+OUTPUT_DIR = PROJECT_ROOT / "outputs"
 
 RECIPES_PATH = DATA_DIR / "RAW_recipes.csv"
 INTERACTIONS_PATH = DATA_DIR / "RAW_interactions.csv"
@@ -75,3 +76,6 @@ DEFAULT_CONFIDENCE = 0.95
 
 # size of the overall top list used in category analysis
 TOP_N_ANALYSIS = 1000
+
+# number of recipes saved in the exported top lists
+TOP_N_EXPORT = 100
