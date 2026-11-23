@@ -42,6 +42,75 @@ def naive_score(recipes: pd.DataFrame) -> pd.Series:
     return recipes["mean_rating"].rename("naive_score")
 
 
+def default_prior_weight(recipes: pd.DataFrame) -> float:
+    """Default prior weight for :func:`bayesian_score`.
+
+    Equal to the :data:`src.config.PRIOR_WEIGHT_QUANTILE` quantile of
+    the number of ratings per recipe.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipe table with an ``n_ratings`` column.
+
+    Returns
+    -------
+    float
+        Prior weight (number of "virtual" ratings).
+    """
+    return float(
+        np.quantile(recipes["n_ratings"], config.PRIOR_WEIGHT_QUANTILE)
+    )
+
+
+def bayesian_score(
+    recipes: pd.DataFrame,
+    prior_weight: float | None = None,
+    prior_mean: float | None = None,
+) -> pd.Series:
+    """Score recipes by the Bayesian average rating.
+
+    Each recipe gets ``prior_weight`` virtual ratings equal to
+    ``prior_mean``::
+
+        score = (prior_weight * prior_mean + n * mean) / (prior_weight + n)
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipe table with ``n_ratings`` and ``mean_rating`` columns
+        (and star columns if ``prior_mean`` is not given).
+    prior_weight : float, optional
+        Number of virtual ratings. Defaults to
+        :func:`default_prior_weight`. With 0 the score equals the
+        naive average.
+    prior_mean : float, optional
+        Value of the virtual ratings. Defaults to
+        :func:`global_mean_rating`.
+
+    Returns
+    -------
+    pandas.Series
+        Score of each recipe, aligned with ``recipes``.
+
+    Raises
+    ------
+    ValueError
+        If ``prior_weight`` is negative.
+    """
+    if prior_weight is None:
+        prior_weight = default_prior_weight(recipes)
+    if prior_weight < 0:
+        raise ValueError("prior_weight must be non-negative")
+    if prior_mean is None:
+        prior_mean = global_mean_rating(recipes)
+
+    n = recipes["n_ratings"]
+    rating_sum = recipes["mean_rating"] * n
+    score = (prior_weight * prior_mean + rating_sum) / (prior_weight + n)
+    return score.rename("bayesian_score")
+
+
 def rank_scores(scores: pd.Series) -> pd.Series:
     """Turn scores into rank positions (1 = best).
 

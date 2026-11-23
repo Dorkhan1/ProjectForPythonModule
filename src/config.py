@@ -66,3 +66,6 @@ TAG_GROUPS = {
 NO_RATING = 0  # review without stars
 STAR_VALUES = [1, 2, 3, 4, 5]
 STAR_COLUMNS = [f"stars_{star}" for star in STAR_VALUES]
+
+# bayesian average: default prior weight = this quantile of n_ratings
+PRIOR_WEIGHT_QUANTILE = 0.9
