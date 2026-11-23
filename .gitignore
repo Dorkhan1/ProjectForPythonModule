@@ -3,6 +3,9 @@
 # See README.md for download instructions.
 data/
 
+# generated results
+outputs/
+
 # --- Python ----------------------------------------------------------
 __pycache__/
 *.py[cod]
