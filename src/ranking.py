@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from src import config
 
@@ -109,6 +110,54 @@ def bayesian_score(
     rating_sum = recipes["mean_rating"] * n
     score = (prior_weight * prior_mean + rating_sum) / (prior_weight + n)
     return score.rename("bayesian_score")
+
+
+def lower_bound_score(
+    recipes: pd.DataFrame,
+    confidence: float = config.DEFAULT_CONFIDENCE,
+) -> pd.Series:
+    """Score recipes by the lower bound of a confidence interval.
+
+    One virtual rating of each star value is added to every recipe
+    (Dirichlet prior), then the score is
+    ``mean - z * sqrt(variance / (N + 1))``, where ``N`` is the number
+    of real and virtual ratings. Based on Evan Miller, "Ranking Items
+    With Star Ratings".
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipe table with ``stars_1`` ... ``stars_5`` columns.
+    confidence : float, optional
+        Confidence level of the two-sided interval, between 0 and 1.
+        Defaults to :data:`src.config.DEFAULT_CONFIDENCE`.
+
+    Returns
+    -------
+    pandas.Series
+        Score of each recipe, aligned with ``recipes``.
+
+    Raises
+    ------
+    ValueError
+        If ``confidence`` is not strictly between 0 and 1.
+    """
+    if not 0 < confidence < 1:
+        raise ValueError("confidence must be between 0 and 1")
+
+    stars = np.array(config.STAR_VALUES, dtype="float64")
+    counts = recipes[config.STAR_COLUMNS].to_numpy() + 1
+    total = counts.sum(axis=1)
+    probs = counts / total[:, np.newaxis]
+
+    mean = probs @ stars
+    variance = probs @ stars**2 - mean**2
+    std_error = np.sqrt(variance / (total + 1))
+    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+
+    return pd.Series(
+        mean - z * std_error, index=recipes.index, name="lower_bound_score"
+    )
 
 
 def rank_scores(scores: pd.Series) -> pd.Series:

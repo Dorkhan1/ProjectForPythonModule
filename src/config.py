@@ -69,3 +69,6 @@ STAR_COLUMNS = [f"stars_{star}" for star in STAR_VALUES]
 
 # bayesian average: default prior weight = this quantile of n_ratings
 PRIOR_WEIGHT_QUANTILE = 0.9
+
+# lower bound of the confidence interval
+DEFAULT_CONFIDENCE = 0.95
