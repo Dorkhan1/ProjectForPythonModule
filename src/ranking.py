@@ -1,10 +1,19 @@
 """Recipe scoring and ranking methods."""
 
+from itertools import combinations
+
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 from src import config
+
+# method name -> score column
+METHODS = {
+    "Naive average": "naive_score",
+    "Bayesian average": "bayesian_score",
+    "Lower bound": "lower_bound_score",
+}
 
 
 def global_mean_rating(recipes: pd.DataFrame) -> float:
@@ -158,6 +167,128 @@ def lower_bound_score(
     return pd.Series(
         mean - z * std_error, index=recipes.index, name="lower_bound_score"
     )
+
+
+def add_scores(
+    recipes: pd.DataFrame,
+    prior_weight: float | None = None,
+    confidence: float = config.DEFAULT_CONFIDENCE,
+) -> pd.DataFrame:
+    """Add the score and rank of every method to the recipe table.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Recipe table from :func:`src.preprocessing.build_recipe_table`.
+    prior_weight : float, optional
+        Passed to :func:`bayesian_score`.
+    confidence : float, optional
+        Passed to :func:`lower_bound_score`.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy of the input with ``<method>_score`` and ``<method>_rank``
+        columns for each method in :data:`METHODS`.
+    """
+    recipes = recipes.copy()
+    recipes["naive_score"] = naive_score(recipes)
+    recipes["bayesian_score"] = bayesian_score(recipes, prior_weight)
+    recipes["lower_bound_score"] = lower_bound_score(recipes, confidence)
+    for score_col in METHODS.values():
+        rank_col = score_col.replace("_score", "_rank")
+        recipes[rank_col] = rank_scores(recipes[score_col])
+    return recipes
+
+
+def top_recipes(
+    scored: pd.DataFrame, method: str, top_n: int = 10
+) -> pd.DataFrame:
+    """Return the best recipes according to one method.
+
+    Parameters
+    ----------
+    scored : pandas.DataFrame
+        Recipe table from :func:`add_scores`.
+    method : str
+        Key of :data:`METHODS`.
+    top_n : int, optional
+        Number of recipes to return.
+
+    Returns
+    -------
+    pandas.DataFrame
+        ``top_n`` rows sorted from best to worst. Ties are kept in
+        table order.
+
+    Raises
+    ------
+    KeyError
+        If ``method`` is not in :data:`METHODS`.
+    """
+    if method not in METHODS:
+        raise KeyError(f"Unknown method: {method}")
+    return scored.nlargest(top_n, METHODS[method], keep="first")
+
+
+def compare_methods(scored: pd.DataFrame, top_n: int = 100) -> pd.DataFrame:
+    """Compare every pair of ranking methods.
+
+    Parameters
+    ----------
+    scored : pandas.DataFrame
+        Recipe table from :func:`add_scores`.
+    top_n : int, optional
+        Size of the top list used for the overlap.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per pair with columns ``method_a``, ``method_b``,
+        ``spearman`` (rank correlation over all recipes) and
+        ``top_overlap`` (share of common recipes in both top lists).
+    """
+    rows = []
+    for method_a, method_b in combinations(METHODS, 2):
+        rho = stats.spearmanr(
+            scored[METHODS[method_a]], scored[METHODS[method_b]]
+        ).statistic
+        top_a = set(top_recipes(scored, method_a, top_n)["recipe_id"])
+        top_b = set(top_recipes(scored, method_b, top_n)["recipe_id"])
+        rows.append({
+            "method_a": method_a,
+            "method_b": method_b,
+            "spearman": rho,
+            "top_overlap": len(top_a & top_b) / top_n,
+        })
+    return pd.DataFrame(rows)
+
+
+def summarize_top(scored: pd.DataFrame, top_n: int = 100) -> pd.DataFrame:
+    """Describe the top recipes of each method.
+
+    Parameters
+    ----------
+    scored : pandas.DataFrame
+        Recipe table from :func:`add_scores`.
+    top_n : int, optional
+        Size of the top list.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Indexed by method, with the minimum and median number of
+        ratings and the mean rating of its top recipes.
+    """
+    rows = {}
+    for method in METHODS:
+        top = top_recipes(scored, method, top_n)
+        rows[method] = {
+            "min_ratings": top["n_ratings"].min(),
+            "median_ratings": top["n_ratings"].median(),
+            "mean_rating": top["mean_rating"].mean(),
+        }
+    return pd.DataFrame.from_dict(rows, orient="index")
 
 
 def rank_scores(scores: pd.Series) -> pd.Series:
