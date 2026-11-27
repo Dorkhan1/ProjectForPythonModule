@@ -11,7 +11,6 @@ from src.ranking import METHODS, top_recipes
 
 COLORS = {
     "primary": "#257de0",
-    "secondary": "#f47230",
     "muted": "#b3b3b3",
     "text": "#191919",
     "text_secondary": "#666666",
@@ -91,7 +90,7 @@ def _label_bars(ax, shares: pd.Series) -> None:
     shares : pandas.Series
         Share (0-1) shown above each bar, in bar order.
     """
-    for patch, share in zip(ax.patches, shares):
+    for patch, share in zip(ax.patches, shares, strict=True):
         ax.annotate(
             f"{share:.1%}",
             (patch.get_x() + patch.get_width() / 2, patch.get_height()),
@@ -179,7 +178,7 @@ def plot_score_vs_ratings(
     """
     fig, axes = plt.subplots(1, len(methods), figsize=(11, 4.5),
                              sharey=True, layout="constrained")
-    for ax, method in zip(axes, methods):
+    for ax, method in zip(axes, methods, strict=True):
         ax.scatter(scored["n_ratings"], scored[METHODS[method]], s=4,
                    alpha=0.08, color=COLORS["primary"], linewidths=0,
                    rasterized=True)
@@ -285,16 +284,17 @@ def plot_rank_changes(
     x = np.arange(len(METHODS))
 
     fig, ax = _new_figure(figsize=(9, 5))
-    for color, (_, recipe) in zip(SERIES_COLORS, examples.iterrows()):
+    rows = zip(SERIES_COLORS, examples.iterrows(), strict=False)
+    for color, (_, recipe) in rows:
         n = recipe["n_ratings"]
         label = f"{recipe['name']} ({n} rating{'s' if n != 1 else ''})"
         ax.plot(x, recipe[rank_cols].to_numpy(dtype=float), color=color,
                 linewidth=2, marker="o", markersize=8, label=label)
 
-    for xi, col in zip(x, rank_cols):
+    for xi, col in zip(x, rank_cols, strict=True):
         ranks = examples[col].to_numpy(dtype=float)
         label_y = _spread_log_positions(ranks)
-        for rank, y in zip(ranks, label_y):
+        for rank, y in zip(ranks, label_y, strict=True):
             ax.annotate(f"{rank:,.0f}", (xi, rank), xytext=(xi + 0.05, y),
                         textcoords="data", va="center", fontsize=9,
                         color=COLORS["text_secondary"])
@@ -347,7 +347,7 @@ def plot_category_lift(
     ax.grid(axis="y", visible=False)
     ax.grid(axis="x", color=COLORS["grid"], linewidth=0.8)
     ax.axvline(1, color=COLORS["text"], linewidth=1, linestyle="--")
-    for patch, value in zip(ax.patches, lift):
+    for patch, value in zip(ax.patches, lift, strict=True):
         # labels of short bars go right of the reference line
         x = max(value, 1)
         y = patch.get_y() + patch.get_height() / 2
@@ -374,7 +374,7 @@ def plot_lift_vs_popularity(tag_summary: pd.DataFrame) -> Figure:
     fig, ax = _new_figure(figsize=(9, 5.5))
     ax.grid(axis="x", color=COLORS["grid"], linewidth=0.8)
     groups = tag_summary["group"].unique()
-    for color, group in zip(SERIES_COLORS, groups):
+    for color, group in zip(SERIES_COLORS, groups, strict=False):
         part = tag_summary[tag_summary["group"] == group]
         ax.scatter(part["ratings_per_recipe"], part["lift"], s=60,
                    color=color, edgecolors="white", linewidths=1.5,
