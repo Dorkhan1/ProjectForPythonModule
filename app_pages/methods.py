@@ -4,17 +4,17 @@ import streamlit as st
 
 from app_pages.shared import get_data, get_scored
 from src import config
+from src.plots import (
+    plot_rank_changes,
+    plot_score_vs_ratings,
+    plot_top_profile,
+)
 from src.ranking import (
     METHODS,
     compare_methods,
     default_prior_weight,
     global_mean_rating,
     summarize_top,
-)
-from src.plots import (
-    plot_rank_changes,
-    plot_score_vs_ratings,
-    plot_top_profile,
 )
 
 CONFIDENCE_LEVELS = [0.80, 0.90, 0.95, 0.99]
