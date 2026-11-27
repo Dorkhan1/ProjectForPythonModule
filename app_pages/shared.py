@@ -45,7 +45,7 @@ def get_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         st.stop()
 
 
-@st.cache_data(show_spinner="Ranking the recipes...")
+@st.cache_data(show_spinner="Ranking the recipes...", max_entries=5)
 def _score(
     _recipes: pd.DataFrame,
     prior_weight: float | None,
