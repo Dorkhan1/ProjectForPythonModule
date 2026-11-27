@@ -79,6 +79,7 @@ TOP_N_ANALYSIS = 1000
 
 # recipes used to show how ranks change between methods
 EXAMPLE_RECIPE_IDS = [486261, 2886, 28768, 44061]
+HIGHLIGHT_RECIPE_ID = 2886  # best banana bread
 
 # number of recipes saved in the exported top lists
 TOP_N_EXPORT = 100

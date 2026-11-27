@@ -4,7 +4,7 @@ import pandas as pd
 from scipy import stats
 
 from src import config
-from src.ranking import DEFAULT_METHOD, top_recipes
+from src.ranking import DEFAULT_METHOD, global_mean_rating, top_recipes
 
 
 def recipes_with_tag(scored: pd.DataFrame, tag: str) -> pd.DataFrame:
@@ -212,3 +212,36 @@ def lift_correlations(summary: pd.DataFrame) -> pd.Series:
         col: stats.spearmanr(summary["lift"], summary[col]).statistic
         for col in ["ratings_per_recipe", "mean_rating"]
     })
+
+
+def dataset_facts(
+    recipes: pd.DataFrame, interactions: pd.DataFrame
+) -> dict[str, float]:
+    """Key numbers about the data and the naive ranking.
+
+    Parameters
+    ----------
+    recipes : pandas.DataFrame
+        Table from :func:`src.preprocessing.build_recipe_table`.
+    interactions : pandas.DataFrame
+        Raw interactions from :func:`src.data_loader.load_interactions`.
+
+    Returns
+    -------
+    dict of str to float
+        ``n_recipes``, ``n_ratings``, ``n_unrated_reviews``,
+        ``share_one_rating`` (share of recipes with a single rating),
+        ``n_perfect_mean`` (recipes with an average of exactly 5) and
+        ``global_mean``.
+    """
+    top_star = max(config.STAR_VALUES)
+    return {
+        "n_recipes": len(recipes),
+        "n_ratings": int(recipes["n_ratings"].sum()),
+        "n_unrated_reviews": int(
+            (interactions["rating"] == config.NO_RATING).sum()
+        ),
+        "share_one_rating": float((recipes["n_ratings"] == 1).mean()),
+        "n_perfect_mean": int((recipes["mean_rating"] == top_star).sum()),
+        "global_mean": global_mean_rating(recipes),
+    }
