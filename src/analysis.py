@@ -1,6 +1,7 @@
 """Ranking analysis across categories (tags, time, ingredients)."""
 
 import pandas as pd
+from scipy import stats
 
 from src import config
 from src.ranking import DEFAULT_METHOD, top_recipes
@@ -161,3 +162,53 @@ def summarize_by_tags(
     data = data.explode("tags").rename(columns={"tags": "tag"})
     data = data[data["tag"].isin(tags)]
     return _summarize(data, "tag", len(scored), top_n)
+
+
+def summarize_tag_groups(
+    scored: pd.DataFrame,
+    method: str = DEFAULT_METHOD,
+    top_n: int = config.TOP_N_ANALYSIS,
+) -> pd.DataFrame:
+    """Summarize every tag of :data:`src.config.TAG_GROUPS` in one table.
+
+    Parameters
+    ----------
+    scored : pandas.DataFrame
+        Recipe table from :func:`src.ranking.add_scores`.
+    method : str, optional
+        Key of :data:`src.ranking.METHODS`.
+    top_n : int, optional
+        Size of the overall top list.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Same columns as :func:`summarize_by_tags` plus ``group``,
+        indexed by tag.
+    """
+    summaries = [
+        summarize_by_tags(scored, tags, method, top_n).assign(group=group)
+        for group, tags in config.TAG_GROUPS.items()
+    ]
+    return pd.concat(summaries)
+
+
+def lift_correlations(summary: pd.DataFrame) -> pd.Series:
+    """Spearman correlation of lift with popularity and with rating.
+
+    Parameters
+    ----------
+    summary : pandas.DataFrame
+        Category summary with ``lift``, ``ratings_per_recipe`` and
+        ``mean_rating`` columns.
+
+    Returns
+    -------
+    pandas.Series
+        Correlation of ``lift`` with ``ratings_per_recipe`` and with
+        ``mean_rating``.
+    """
+    return pd.Series({
+        col: stats.spearmanr(summary["lift"], summary[col]).statistic
+        for col in ["ratings_per_recipe", "mean_rating"]
+    })
