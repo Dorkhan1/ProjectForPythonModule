@@ -80,6 +80,8 @@ TOP_N_ANALYSIS = 1000
 # recipes used to show how ranks change between methods
 EXAMPLE_RECIPE_IDS = [486261, 2886, 28768, 44061]
 HIGHLIGHT_RECIPE_ID = 2886  # best banana bread
+# weakness of the bayesian average: many average ratings vs one 5-star
+WEAKNESS_EXAMPLE_IDS = (28768, 44061)
 
 # number of recipes saved in the exported top lists
 TOP_N_EXPORT = 100
