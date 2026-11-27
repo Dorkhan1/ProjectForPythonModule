@@ -229,18 +229,24 @@ def dataset_facts(
     Returns
     -------
     dict of str to float
-        ``n_recipes``, ``n_ratings``, ``n_unrated_reviews``,
-        ``share_one_rating`` (share of recipes with a single rating),
-        ``n_perfect_mean`` (recipes with an average of exactly 5) and
-        ``global_mean``.
+        ``n_reviews`` (all interactions), ``n_recipes_reviewed`` (recipes
+        with any review), ``n_recipes`` (recipes with star ratings),
+        ``n_ratings``, ``n_unrated_reviews``, ``n_invalid_minutes``,
+        ``n_without_tags``, ``share_one_rating`` (share of recipes with
+        a single rating), ``n_perfect_mean`` (recipes with an average of
+        exactly 5) and ``global_mean``.
     """
     top_star = max(config.STAR_VALUES)
     return {
+        "n_reviews": len(interactions),
+        "n_recipes_reviewed": int(interactions["recipe_id"].nunique()),
         "n_recipes": len(recipes),
         "n_ratings": int(recipes["n_ratings"].sum()),
         "n_unrated_reviews": int(
             (interactions["rating"] == config.NO_RATING).sum()
         ),
+        "n_invalid_minutes": int(recipes["minutes"].isna().sum()),
+        "n_without_tags": int((recipes["tags"].map(len) == 0).sum()),
         "share_one_rating": float((recipes["n_ratings"] == 1).mean()),
         "n_perfect_mean": int((recipes["mean_rating"] == top_star).sum()),
         "global_mean": global_mean_rating(recipes),
