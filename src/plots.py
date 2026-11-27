@@ -310,3 +310,85 @@ def plot_rank_changes(
     _set_titles(ax, "Rank of example recipes under each method "
                 "(1 = best)", "", "Rank (log scale)")
     return fig
+
+
+def plot_category_lift(
+    summary: pd.DataFrame, title: str, sort: bool = True
+) -> Figure:
+    """Horizontal bars of the lift of each category.
+
+    Bars above 1 (over-represented in the top) are blue, the others gray.
+
+    Parameters
+    ----------
+    summary : pandas.DataFrame
+        Category summary from :mod:`src.analysis` with a ``lift`` column.
+    title : str
+        Plot title.
+    sort : bool, optional
+        Sort categories by lift. Use False for ordered categories
+        such as time intervals.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The plot.
+    """
+    lift = summary["lift"]
+    if sort:
+        lift = lift.sort_values(ascending=False)
+    labels = lift.index.astype(str)
+    colors = [COLORS["primary"] if value >= 1 else COLORS["muted"]
+              for value in lift]
+
+    fig, ax = _new_figure(figsize=(8, 0.4 * len(lift) + 1.5))
+    sns.barplot(x=lift.to_numpy(), y=labels, hue=labels, palette=colors,
+                legend=False, saturation=1, width=0.7, ax=ax)
+    ax.grid(axis="y", visible=False)
+    ax.grid(axis="x", color=COLORS["grid"], linewidth=0.8)
+    ax.axvline(1, color=COLORS["text"], linewidth=1, linestyle="--")
+    for patch, value in zip(ax.patches, lift):
+        # labels of short bars go right of the reference line
+        x = max(value, 1)
+        y = patch.get_y() + patch.get_height() / 2
+        ax.annotate(f"{value:.2f}×", (x, y), xytext=(4, 0),
+                    textcoords="offset points", va="center", fontsize=9,
+                    color=COLORS["text_secondary"])
+    _set_titles(ax, title, "Lift (share in top / share in all recipes)", "")
+    return fig
+
+
+def plot_lift_vs_popularity(tag_summary: pd.DataFrame) -> Figure:
+    """Scatter plot of lift against ratings per recipe for all tags.
+
+    Parameters
+    ----------
+    tag_summary : pandas.DataFrame
+        Table from :func:`src.analysis.summarize_tag_groups`.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The plot.
+    """
+    fig, ax = _new_figure(figsize=(9, 5.5))
+    ax.grid(axis="x", color=COLORS["grid"], linewidth=0.8)
+    groups = tag_summary["group"].unique()
+    for color, group in zip(SERIES_COLORS, groups):
+        part = tag_summary[tag_summary["group"] == group]
+        ax.scatter(part["ratings_per_recipe"], part["lift"], s=60,
+                   color=color, edgecolors="white", linewidths=1.5,
+                   label=group, zorder=3)
+
+    extremes = pd.concat([tag_summary.nlargest(3, "lift"),
+                          tag_summary.nsmallest(3, "lift")])
+    for tag, row in extremes.iterrows():
+        ax.annotate(tag, (row["ratings_per_recipe"], row["lift"]),
+                    xytext=(7, 0), textcoords="offset points", va="center",
+                    fontsize=9, color=COLORS["text_secondary"])
+
+    ax.axhline(1, color=COLORS["text"], linewidth=1, linestyle="--")
+    ax.legend(frameon=False, fontsize=9, loc="upper left")
+    _set_titles(ax, "Tags with more ratings per recipe reach the top "
+                "more often", "Average ratings per recipe", "Lift")
+    return fig
