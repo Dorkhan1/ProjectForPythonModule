@@ -7,24 +7,6 @@ from src import config
 from src.ranking import DEFAULT_METHOD, global_mean_rating, top_recipes
 
 
-def recipes_with_tag(scored: pd.DataFrame, tag: str) -> pd.DataFrame:
-    """Select recipes that have a given tag.
-
-    Parameters
-    ----------
-    scored : pandas.DataFrame
-        Recipe table with a ``tags`` column of lists.
-    tag : str
-        Tag to look for.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Rows of ``scored`` whose tags contain ``tag``.
-    """
-    return scored[scored["tags"].map(lambda tags: tag in tags)]
-
-
 def filter_recipes(
     scored: pd.DataFrame,
     tag: str | None = None,
