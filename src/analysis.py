@@ -25,6 +25,44 @@ def recipes_with_tag(scored: pd.DataFrame, tag: str) -> pd.DataFrame:
     return scored[scored["tags"].map(lambda tags: tag in tags)]
 
 
+def filter_recipes(
+    scored: pd.DataFrame,
+    tag: str | None = None,
+    time_categories: list[str] | None = None,
+    ingredient_categories: list[str] | None = None,
+    min_ratings: int = 1,
+) -> pd.DataFrame:
+    """Select recipes matching all given filters.
+
+    Parameters
+    ----------
+    scored : pandas.DataFrame
+        Recipe table from :func:`src.ranking.add_scores`.
+    tag : str, optional
+        Keep only recipes with this tag. None keeps all.
+    time_categories : list of str, optional
+        Allowed values of ``time_category``. None keeps all, including
+        recipes with unknown time.
+    ingredient_categories : list of str, optional
+        Allowed values of ``ingredient_category``. None keeps all.
+    min_ratings : int, optional
+        Minimum number of ratings.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Matching rows of ``scored``.
+    """
+    mask = scored["n_ratings"] >= min_ratings
+    if tag is not None:
+        mask &= scored["tags"].map(lambda tags: tag in tags)
+    if time_categories is not None:
+        mask &= scored["time_category"].isin(time_categories)
+    if ingredient_categories is not None:
+        mask &= scored["ingredient_category"].isin(ingredient_categories)
+    return scored[mask]
+
+
 def _mark_top(scored: pd.DataFrame, method: str, top_n: int) -> pd.DataFrame:
     """Add a boolean ``in_top`` column for the overall top recipes.
 
